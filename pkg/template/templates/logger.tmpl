@@ -1,0 +1,47 @@
+// logger/logger.go
+package logger
+
+import (
+	"fmt"
+	"os"
+
+	"github.com/sirupsen/logrus"
+	"gitlab.com/avarf/getenvs"
+)
+
+// Define a global logger variable
+var LogRus *logrus.Logger
+
+type Fields logrus.Fields
+
+// Initialize the logger in init()
+func init() {
+	LogRus = logrus.New()
+	LogRus.SetFormatter(&logrus.JSONFormatter{})
+	logLevel, _ := getenvs.GetEnvInt("LOGLEVEL", 4)
+	LogRus.SetLevel(logrus.Level(logLevel)) // You can change this level as needed
+	LogRus.Info(fmt.Sprintf("Logging initialized with log level: %d", logLevel))
+}
+
+func Log(level int, args ...interface{}) {
+	var message string
+	var fields Fields
+
+	if len(args) > 1 {
+		if m, ok := args[1].(Fields); ok {
+			fields = m
+			message = fmt.Sprintf("%v", args[0])
+		}
+	} else {
+		message = fmt.Sprintf("%v", args[0])
+	}
+
+	if len(fields) > 0 {
+		LogRus.WithFields(logrus.Fields(fields)).Log(logrus.Level(level), message)
+	} else {
+		LogRus.Log(logrus.Level(level), message)
+	}
+	if logrus.Level(level) == logrus.FatalLevel {
+		os.Exit(1)
+	}
+}

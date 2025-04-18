@@ -1,0 +1,4 @@
+pkg/tools/linux/
+pkg/tools/windows/
+pkg/tools/darwin/
+/tmp

@@ -1,0 +1,19 @@
+package main
+
+import (
+	"fmt"
+	"{{.ModulePath}}/internal/server"
+	"{{.ModulePath}}/internal/logger"
+)
+
+func main() {
+	port := 9000
+
+	srv, err := server.NewServer(port)
+	if err != nil {
+		logger.Log(1, fmt.Sprintf("Error when creating server: %s", err))
+	}
+	if err := srv.Start(); err != nil {
+		logger.Log(1, fmt.Sprintf("Error when starting server: %s", err))
+	}
+}

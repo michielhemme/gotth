@@ -1,13 +1,11 @@
-VERSION := $(shell git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
+TAG := $(shell git describe --tags --exact-match 2>/dev/null)
+VERSION := $(shell git tag --sort=-creatordate | head -n1 || echo "v0.0.0")
 BRANCH := $(shell git rev-parse --abbrev-ref HEAD)
-REPO := $(shell basename -s .git `git config --get remote.origin.url`)
 
-ifeq ($(BRANCH),main)
-  FULL_VERSION := $(VERSION)
-else ifeq ($(BRANCH),master)
-  FULL_VERSION := $(VERSION)
+ifeq ($(TAG),)
+  FULL_VERSION := $(VERSION)-$(BRANCH)
 else
-  FULL_VERSION := $(VERSION)-$(REPO)
+  FULL_VERSION := $(TAG)
 endif
 
 .PHONY: help
@@ -20,8 +18,4 @@ download-tools: ## download the required dependencies
 
 .PHONY: build
 build: ## build the application to the ./tmp folder
-	go build -o ./tmp/gotth .
-
-.PHONY: debug
-debug: ## just debugging
-	go run -ldflags "-X github.com/michielhemme/gotth/cmd.Version=$(VERSION)" . version
+	go build -ldflags "-X github.com/michielhemme/gotth/cmd.Version=$(FULL_VERSION)" -o ./tmp/gotth .

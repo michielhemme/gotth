@@ -19,6 +19,22 @@ jobs:
       uses: actions/setup-go@v4
       with:
         go-version: '1.23.5'
+    - name: Determine version
+      id: version
+      run: |
+        # Try to get tag if this is a tagged commit
+        TAG=$(git describe --tags --exact-match 2>/dev/null || true)
+
+        # Fallback to most recent tag + branch name
+        if [ -z "$TAG" ]; then
+          VERSION=$(git tag --sort=-creatordate | head -n1 || echo "v0.0.0")
+          BRANCH=$(git rev-parse --abbrev-ref HEAD | sed 's#[^a-zA-Z0-9]#_#g') # safe for filenames
+          FULL_VERSION="${VERSION}-${BRANCH}"
+        else
+          FULL_VERSION=$TAG
+        fi
+
+        echo "version=$FULL_VERSION" >> $GITHUB_OUTPUT
 
     - name: Download dependencies
       run: go run ./tools/downloader
@@ -27,12 +43,18 @@ jobs:
 
     - name: Build for Linux
       run: |
-        GOOS=linux GOARCH=amd64 go build -o dist/gotth-linux-amd64 .
+        GOOS=linux GOARCH=amd64 go build \
+        -ldflags="-X github.com/michielhemme/gotth/cmd.Version=${{ steps.version.outputs.version }}" \
+        -o dist/gotth-linux-amd64 .
 
     - name: Build for Windows
       run: |
-        GOOS=windows GOARCH=amd64 go build -o dist/gotth-windows-amd64.exe .
+        GOOS=windows GOARCH=amd64 go build \
+        -ldflags="-X github.com/michielhemme/gotth/cmd.Version=${{ steps.version.outputs.version }}" \
+        -o dist/gotth-windows-amd64.exe .
 
     - name: Build for macOS (Darwin)
       run: |
-        GOOS=darwin GOARCH=amd64 go build -o dist/gotth-darwin-amd64 .
+        GOOS=darwin GOARCH=amd64 go build \
+        -ldflags="-X github.com/michielhemme/gotth/cmd.Version=${{ steps.version.outputs.version }}" \
+        -o dist/gotth-darwin-amd64 .

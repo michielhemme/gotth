@@ -19,3 +19,7 @@ download-tools: ## download the required dependencies
 .PHONY: build
 build: ## build the application to the ./tmp folder
 	go build -ldflags "-X github.com/michielhemme/gotth/cmd.Version=$(FULL_VERSION)" -o ./tmp/gotth .
+
+.PHONY: show-version
+show-version: ## show current version of the application
+	echo "Current version: $(FULL_VERSION)"

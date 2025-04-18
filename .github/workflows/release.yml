@@ -1,0 +1,52 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build-and-release:
+    name: Build and Release Binaries
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.23.5'
+
+      - name: Download dependencies
+        run: go run ./tools/downloader
+
+      - name: Create output directory
+        run: mkdir -p dist
+
+      - name: Build for Linux
+        run: GOOS=linux GOARCH=amd64 go build -o dist/gotth-linux-amd64 .
+
+      - name: Build for Windows
+        run: GOOS=windows GOARCH=amd64 go build -o dist/gotth-windows-amd64.exe .
+
+      - name: Build for macOS
+        run: GOOS=darwin GOARCH=amd64 go build -o dist/gotth-darwin-amd64 .
+
+      - name: Generate checksums
+        run: |
+          cd dist
+          sha256sum * > checksums.txt
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dist/gotth-*
+            dist/checksums.txt
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

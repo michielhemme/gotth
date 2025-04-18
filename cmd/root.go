@@ -23,4 +23,5 @@ func init() {
 	// Subcommands are added here
 	rootCmd.AddCommand(initializeCmd)
 	rootCmd.AddCommand(airCmd)
+	rootCmd.AddCommand(versionCmd)
 }

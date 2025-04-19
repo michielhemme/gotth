@@ -2,7 +2,6 @@ package tools
 
 import (
 	_ "embed"
-	"fmt"
 	"html/template"
 	"os"
 	"path"
@@ -15,36 +14,53 @@ import (
 var airTmplData []byte
 var airTmplName = "air.toml"
 
-func InitializeConfiguration() {
+func InitializeConfiguration() error {
+	cacheDir, err := lib.GetCacheDir()
+	if err != nil {
+		return err
+	}
+
+	outputFilePath := path.Join(cacheDir, airTmplName)
+	_, err = os.Stat(outputFilePath)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return nil
+		}
+		return err
+	}
+
+	tailwindCSS, err := GetExecutable("tailwind")
+	if err != nil {
+		return err
+	}
+	templ, err := GetExecutable("templ")
+	if err != nil {
+		return err
+	}
 	data := struct {
 		TailwindCSS string
 		Templ       string
 		OutputFile  string
 	}{
-		TailwindCSS: strings.ReplaceAll(string(GetExecutable("tailwind")), "\\", "\\\\"),
-		Templ:       strings.ReplaceAll(string(GetExecutable("templ")), "\\", "\\\\"),
+		TailwindCSS: strings.ReplaceAll(string(tailwindCSS), "\\", "\\\\"),
+		Templ:       strings.ReplaceAll(string(templ), "\\", "\\\\"),
 		OutputFile:  lib.AppendIfExe("./tmp/main"),
 	}
 
 	tmpl, err := template.New("airConfig").Parse(string(airTmplData))
 	if err != nil {
-		fmt.Println("Error parsing template:", err)
-		return
+		return err
 	}
 
-	outputFilePath := path.Join(lib.GetCacheDir(), airTmplName)
 	f, err := os.Create(outputFilePath)
 	if err != nil {
-		fmt.Println("Error creating output file:", err)
-		return
+		return err
 	}
 	defer f.Close()
 
 	err = tmpl.Execute(f, data)
 	if err != nil {
-		fmt.Println("Error executing template:", err)
-		return
+		return err
 	}
-
-	fmt.Println("✅ air.toml written successfully.")
+	return nil
 }

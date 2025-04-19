@@ -2,13 +2,10 @@ package lib
 
 import (
 	"crypto/sha256"
-	"fmt"
 	"io"
 	"os"
 	"path/filepath"
 	"runtime"
-
-	"github.com/michielhemme/gotth/pkg/logger"
 )
 
 func AppendIfExe(input string) (output string) {
@@ -32,18 +29,18 @@ func FileChecksum(path string) ([]byte, error) {
 	return hash.Sum(nil), nil
 }
 
-func EnsureCacheDir(cacheDir string) {
+func EnsureCacheDir(cacheDir string) error {
 	err := os.MkdirAll(cacheDir, 0755)
 	if err != nil {
-		logger.Log(1, fmt.Sprintf("failed to create cache dir: %v", err))
+		return err
 	}
+	return nil
 }
 
-func GetCacheDir() string {
+func GetCacheDir() (string, error) {
 	base, err := os.UserCacheDir()
 	if err != nil {
-		logger.Log(1, fmt.Sprintf("error retrieving cache dir: %v", err))
+		return "", err
 	}
-	logger.Log(5, fmt.Sprintf("application cache dir set to: %v", base))
-	return filepath.Join(base, ".gotth")
+	return filepath.Join(base, ".gotth"), nil
 }

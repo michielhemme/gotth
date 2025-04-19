@@ -9,7 +9,6 @@ import (
 	"path/filepath"
 
 	"github.com/michielhemme/gotth/pkg/lib"
-	"github.com/michielhemme/gotth/pkg/logger"
 )
 
 type Executable string
@@ -32,12 +31,16 @@ var Tools = map[string]Binary{
 	"templ":    {Name: templBinaryName, Data: templBinaryData},
 }
 
-func GetExecutable(option string) Executable {
+func GetExecutable(option string) (Executable, error) {
 	binary, ok := Tools[option]
 	if !ok {
-		logger.Log(1, fmt.Sprintf("GetExecutable selected option does not exist: %v", option))
+		return Executable(""), fmt.Errorf("GetExecutable selected option does not exist: %v", option)
 	}
-	return Executable(path.Join(lib.GetCacheDir(), binary.Name))
+	cacheDir, err := lib.GetCacheDir()
+	if err != nil {
+		return Executable(""), err
+	}
+	return Executable(path.Join(cacheDir, binary.Name)), nil
 }
 
 func ExecuteCommand(executable Executable, args ...string) error {
@@ -48,35 +51,65 @@ func ExecuteCommand(executable Executable, args ...string) error {
 	return cmd.Run()
 }
 
-func InitializeTools() {
-	logger.Log(5, "initializing tools")
+func verifyHashMatch(path string, data []byte) (bool, error) {
+	existingHash, err := lib.FileChecksum(path)
+	if err != nil {
+		return false, err
+	}
+	expectedHash := sha256.Sum256(data)
+	if string(existingHash) == string(expectedHash[:]) {
+		return false, nil
+	}
+	return true, nil
+}
 
-	cacheDir := lib.GetCacheDir()
+func hasTool(tool string) (bool, error) {
+	cacheDir, err := lib.GetCacheDir()
+	if err != nil {
+		return false, err
+	}
+	binaryPath := filepath.Join(cacheDir, tool)
+
+	_, err = os.Stat(binaryPath)
+	if err == nil {
+		return true, nil
+	}
+	if os.IsNotExist(err) {
+		return false, nil
+	}
+	return false, err
+}
+
+func InitializeTools() error {
+	cacheDir, err := lib.GetCacheDir()
+	if err != nil {
+		return err
+	}
 	lib.EnsureCacheDir(cacheDir)
 
 	for _, data := range Tools {
-		binaryPath := filepath.Join(cacheDir, data.Name)
 		needsWrite := true
-
-		if _, err := os.Stat(binaryPath); err == nil {
-			existingHash, err := lib.FileChecksum(binaryPath)
-			if err == nil {
-				expectedHash := sha256.Sum256(data.Data)
-				if string(existingHash) == string(expectedHash[:]) {
-					needsWrite = false
-					logger.Log(5, fmt.Sprintf("binary already exists, skipping: %s", data.Name))
-				}
-			}
+		binaryPath := filepath.Join(cacheDir, data.Name)
+		// Check if tool is already present on the system
+		exists, err := hasTool(data.Name)
+		if err != nil {
+			return err
 		}
-
+		// Check if tool has right checksum
+		correctHash, err := verifyHashMatch(binaryPath, data.Data)
+		if err != nil {
+			return err
+		}
+		if exists && correctHash {
+			needsWrite = false
+		}
+		// Write file to disk if it is not present or has invalid checksum
 		if needsWrite {
 			err := os.WriteFile(binaryPath, data.Data, 0755)
 			if err != nil {
-				logger.Log(1, "failed to write binary file: %s", err)
+				return err
 			}
-			logger.Log(5, fmt.Sprintf("written to disk: %s", data.Name))
 		}
-
 	}
-	logger.Log(5, "tools initialized")
+	return nil
 }

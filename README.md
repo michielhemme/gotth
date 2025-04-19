@@ -14,7 +14,7 @@ GoTTH wraps and manages essential CLI tools like `templ`, `air`, and `tailwindcs
 
 - ⛔ Initialize a new GoTTH project with best practices
 - ✅ Manage and build frontend assets using TailwindCSS
-- ✅ Live reload support via `air`
+- ✅ Live reload support via `gotth air`
 - ✅ Compile Templ templates
 - ⛔ Simplified setup process
 

@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"fmt"
 	"path"
 
 	"github.com/michielhemme/gotth/pkg/lib"
@@ -15,10 +14,17 @@ var airCmd = &cobra.Command{
 	Short: "Run the air service",
 	Long:  `Start the air service to auto-reload your application during development.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		executable := tools.GetExecutable("air")
-		err := tools.ExecuteCommand(executable, "-c", path.Join(lib.GetCacheDir(), "air.toml"))
+		executable, err := tools.GetExecutable("air")
 		if err != nil {
-			logger.Log(1, fmt.Sprintf("Could not execute command for air service: %v", err))
+			logger.Log(1, err)
+		}
+		cacheDir, err := lib.GetCacheDir()
+		if err != nil {
+			logger.Log(1, err)
+		}
+		err = tools.ExecuteCommand(executable, "-c", path.Join(cacheDir, "air.toml"))
+		if err != nil {
+			logger.Log(1, err)
 		}
 	},
 }

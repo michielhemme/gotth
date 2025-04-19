@@ -9,48 +9,6 @@ import (
 	"path/filepath"
 )
 
-// func extractTarGz(filePath, destination string) error {
-// 	f, err := os.Open(filePath)
-// 	if err != nil {
-// 		return err
-// 	}
-// 	defer f.Close()
-
-// 	gzr, err := gzip.NewReader(f)
-// 	if err != nil {
-// 		return err
-// 	}
-// 	defer gzr.Close()
-
-// 	tr := tar.NewReader(gzr)
-// 	for {
-// 		header, err := tr.Next()
-// 		if err == io.EOF {
-// 			break
-// 		}
-// 		if err != nil {
-// 			return err
-// 		}
-
-// 		target := filepath.Join(destination, header.Name)
-// 		switch header.Typeflag {
-// 		case tar.TypeReg:
-// 			outFile, err := os.Create(target)
-// 			if err != nil {
-// 				return err
-// 			}
-// 			if _, err := io.Copy(outFile, tr); err != nil {
-// 				outFile.Close()
-// 				return err
-// 			}
-// 			outFile.Close()
-// 		case tar.TypeDir:
-// 			os.MkdirAll(target, os.ModePerm)
-// 		}
-// 	}
-// 	return nil
-// }
-
 func extractSingleFileFromTarGz(tarGzPath, targetFileName, outputPath string) error {
 	f, err := os.Open(tarGzPath)
 	if err != nil {

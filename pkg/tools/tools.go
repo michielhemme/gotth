@@ -4,7 +4,6 @@ import (
 	"crypto/sha256"
 	"fmt"
 	"os"
-	"os/exec"
 	"path"
 	"path/filepath"
 
@@ -28,7 +27,6 @@ type Binary struct {
 var Tools = map[string]Binary{
 	"air":      {Name: airBinaryName, Data: airBinaryData},
 	"tailwind": {Name: tailwindBinaryName, Data: tailwindBinaryData},
-	"templ":    {Name: templBinaryName, Data: templBinaryData},
 }
 
 func GetExecutable(option string) (Executable, error) {
@@ -41,14 +39,6 @@ func GetExecutable(option string) (Executable, error) {
 		return Executable(""), err
 	}
 	return Executable(path.Join(cacheDir, binary.Name)), nil
-}
-
-func ExecuteCommand(executable Executable, args ...string) error {
-	cmd := exec.Command(string(executable), args...)
-	cmd.Dir, _ = os.Getwd()
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	return cmd.Run()
 }
 
 func verifyHashMatch(path string, data []byte) (bool, error) {

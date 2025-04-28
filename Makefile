@@ -2,10 +2,10 @@ TAG := $(shell git describe --tags --exact-match 2>/dev/null)
 VERSION := $(shell git tag --sort=-creatordate | head -n1 || echo "v0.0.0")
 BRANCH := $(shell git rev-parse --abbrev-ref HEAD)
 
-ifeq ($(TAG),)
-  FULL_VERSION := $(VERSION)-$(BRANCH)
-else
+ifeq ($(BRANCH),HEAD)
   FULL_VERSION := $(TAG)
+else
+  FULL_VERSION := $(VERSION)-$(BRANCH)
 endif
 
 .PHONY: help

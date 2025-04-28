@@ -4,9 +4,16 @@ import (
 	"crypto/sha256"
 	"io"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"runtime"
 )
+
+type Command struct {
+	WorkingDir string
+	Program    string
+	Args       []string
+}
 
 func AppendIfExe(input string) (output string) {
 	if runtime.GOOS == "windows" {
@@ -43,4 +50,12 @@ func GetCacheDir() (string, error) {
 		return "", err
 	}
 	return filepath.Join(base, ".gotth"), nil
+}
+
+func RunCommand(command Command) error {
+	cmd := exec.Command(command.Program, command.Args...)
+	cmd.Dir = command.WorkingDir
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	return cmd.Run()
 }

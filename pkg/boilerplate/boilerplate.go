@@ -33,6 +33,9 @@ var loggerTmpl []byte
 //go:embed templates/index.tmpl
 var indexTmpl []byte
 
+//go:embed templates/indexgo.tmpl
+var indexGoTmpl []byte
+
 //go:embed templates/custom.tmpl
 var customTmpl []byte
 
@@ -49,6 +52,7 @@ var fileMapping = []File{
 	{File: "internal/server/server.go", Data: serverTmpl},
 	{File: "internal/logger/logger.go", Data: loggerTmpl},
 	{File: "internal/templates/index.templ", Data: indexTmpl},
+	{File: "internal/templates/index_templ.go", Data: indexGoTmpl},
 	{File: "static/css/custom.css", Data: customTmpl},
 	{File: ".gitignore", Data: gitignoreTmpl},
 	{File: "tailwind.config.js", Data: tailwindConfigJsTmpl},

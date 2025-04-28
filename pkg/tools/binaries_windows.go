@@ -12,7 +12,3 @@ var airBinaryName = "air.exe"
 //go:embed windows/tailwindcss.exe
 var tailwindBinaryData []byte
 var tailwindBinaryName = "tailwindcss.exe"
-
-//go:embed windows/templ.exe
-var templBinaryData []byte
-var templBinaryName = "templ.exe"

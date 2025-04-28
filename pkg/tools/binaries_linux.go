@@ -12,7 +12,3 @@ var airBinaryName = "air"
 //go:embed linux/tailwindcss
 var tailwindBinaryData []byte
 var tailwindBinaryName = "tailwindcss"
-
-//go:embed linux/templ
-var templBinaryData []byte
-var templBinaryName = "templ"

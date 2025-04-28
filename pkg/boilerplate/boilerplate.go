@@ -3,12 +3,12 @@ package boilerplate
 import (
 	_ "embed"
 	"fmt"
-	"io/fs"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"strings"
 	"text/template"
+
+	"github.com/michielhemme/gotth/pkg/lib"
 )
 
 type TemplateData struct {
@@ -43,6 +43,8 @@ var gitignoreTmpl []byte
 var tailwindConfigJsTmpl []byte
 
 var fileMapping = []File{
+	{File: "go.mod", Data: nil},
+	{File: "go.sum", Data: nil},
 	{File: "main.go", Data: mainTmpl},
 	{File: "internal/server/server.go", Data: serverTmpl},
 	{File: "internal/logger/logger.go", Data: loggerTmpl},
@@ -55,12 +57,8 @@ var fileMapping = []File{
 func alreadyInitialized(path string) (bool, error) {
 	for _, file := range fileMapping {
 		path := filepath.Join(path, file.File)
-		_, err := os.Stat(path)
-		if err == nil {
-			return true, nil
-		}
-		if !os.IsNotExist(err) {
-			return true, err
+		if _, err := os.Stat(path); err == nil {
+			return true, fmt.Errorf("project already initialized, found: %v", path)
 		}
 	}
 	return false, nil
@@ -73,53 +71,26 @@ func parseChild(projectName string, path string, isChild bool) string {
 	return path
 }
 
-func hasGo(dir string) (bool, error) {
-	hasGo := false
-	err := filepath.WalkDir(dir, func(path string, d fs.DirEntry, err error) error {
-		if err != nil {
-			return err
-		}
-
-		if !d.IsDir() && strings.HasSuffix(d.Name(), ".go") {
-			hasGo = true
-			return fs.SkipDir // we found a .go file, no need to keep walking
-		}
-		return nil
-	})
-
-	if os.IsNotExist(err) {
-		return false, nil
-	}
-
-	if err != nil {
-		return false, err
-	}
-
-	return hasGo, nil
-}
-
 func InitializeProject(modulePath string, childDirectory bool) error {
 	moduleSplit := strings.Split(modulePath, "/")
 	projectName := moduleSplit[len(moduleSplit)-1]
+	projectDir := parseChild(projectName, "", childDirectory)
 
 	templateData := TemplateData{
 		ProjectName: projectName,
 		ModulePath:  modulePath,
 	}
 
-	goProject, err := hasGo(filepath.Join(parseChild(projectName, "", childDirectory)))
-
-	if err != nil {
+	if _, err := alreadyInitialized(projectDir); err != nil {
 		return err
 	}
 
-	if goProject {
-		return fmt.Errorf("directory already containing go files")
-	}
-
 	for _, file := range fileMapping {
-		dir := filepath.Join(parseChild(projectName, filepath.Dir(file.File), childDirectory))
-		filePath := filepath.Join(parseChild(projectName, file.File, childDirectory))
+		if file.Data == nil {
+			continue
+		}
+		dir := filepath.Join(projectDir, filepath.Dir(file.File))
+		filePath := filepath.Join(projectDir, file.File)
 
 		if err := os.MkdirAll(dir, 0755); err != nil {
 			return err
@@ -127,9 +98,18 @@ func InitializeProject(modulePath string, childDirectory bool) error {
 		if err := renderTemplateToFile(file.Data, templateData, filePath); err != nil {
 			return err
 		}
+
+	}
+	for _, step := range []func() error{
+		func() error { return runGoModInit(projectDir, modulePath) },
+		func() error { return runGoModTidy(projectDir, modulePath) },
+		func() error { return runTempl(projectDir) },
+	} {
+		if err := step(); err != nil {
+			return err
+		}
 	}
 	return nil
-	// if runGoModInit()
 }
 
 func renderTemplateToFile(tmplByte []byte, templateData TemplateData, targetFile string) error {
@@ -146,9 +126,34 @@ func renderTemplateToFile(tmplByte []byte, templateData TemplateData, targetFile
 }
 
 func runGoModInit(projectDir, modulePath string) error {
-	cmd := exec.Command("go", "mod", "init", modulePath)
-	cmd.Dir = projectDir
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	return cmd.Run()
+	if err := lib.RunCommand(lib.Command{
+		WorkingDir: projectDir,
+		Program:    "go",
+		Args:       []string{"mod", "init", modulePath},
+	}); err != nil {
+		return err
+	}
+	return nil
+}
+
+func runGoModTidy(projectDir, modulePath string) error {
+	if err := lib.RunCommand(lib.Command{
+		WorkingDir: projectDir,
+		Program:    "go",
+		Args:       []string{"mod", "tidy"},
+	}); err != nil {
+		return err
+	}
+	return nil
+}
+
+func runTempl(projectDir string) error {
+	if err := lib.RunCommand(lib.Command{
+		WorkingDir: projectDir,
+		Program:    "templ",
+		Args:       []string{"generate"},
+	}); err != nil {
+		return err
+	}
+	return nil
 }

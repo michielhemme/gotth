@@ -12,17 +12,17 @@ GoTTH wraps and manages essential CLI tools like `templ`, `air`, and `tailwindcs
 
 ## 🚀 Features
 
-- ⛔ Initialize a new GoTTH project with best practices
+- ✅ Initialize a new GoTTH project
 - ✅ Manage and build frontend assets using TailwindCSS
 - ✅ Live reload support via `gotth air`
 - ✅ Compile Templ templates
-- ⛔ Simplified setup process
+- ✅ Simplified setup process
 
 ---
 
 ## 📦 Installation
 
-Download the latest release from the [releases page](#) and place the binary in a folder that’s part of your system’s `PATH`.
+Download the latest release from the [releases page](https://github.com/michielhemme/gotth/releases) and place the binary in a folder that’s part of your system’s `PATH`.
 
 ### Adding to PATH
 

@@ -22,8 +22,11 @@ var airCmd = &cobra.Command{
 		if err != nil {
 			logger.Log(1, err)
 		}
-		err = tools.ExecuteCommand(executable, "-c", path.Join(cacheDir, "air.toml"))
-		if err != nil {
+		if err := lib.RunCommand(lib.Command{
+			WorkingDir: "",
+			Program:    string(executable),
+			Args:       []string{"-c", path.Join(cacheDir, "air.toml")},
+		}); err != nil {
 			logger.Log(1, err)
 		}
 	},

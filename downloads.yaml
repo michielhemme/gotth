@@ -4,10 +4,13 @@
     name: "air.exe"
   - url: "https://github.com/tailwindlabs/tailwindcss/releases/download/v4.1.4/tailwindcss-windows-x64.exe"
     name: "tailwindcss.exe"
-  - url: "https://github.com/a-h/templ/releases/download/v0.3.857/templ_Windows_x86_64.tar.gz"
-    name: "templ_Windows_x86_64.tar.gz"
-    extractTarGz: true
-    targetFile: "templ.exe"
+
+- name: linux
+  download:
+  - url: "https://github.com/air-verse/air/releases/download/v1.61.7/air_1.61.7_linux_amd64"
+    name: "air"
+  - url: "https://github.com/tailwindlabs/tailwindcss/releases/download/v4.1.4/tailwindcss-linux-x64"
+    name: "tailwindcss"
 
 - name: darwin
   download:
@@ -15,7 +18,3 @@
     name: "air"
   - url: "https://github.com/tailwindlabs/tailwindcss/releases/download/v4.1.4/tailwindcss-macos-x64"
     name: "tailwindcss"
-  - url: "https://github.com/a-h/templ/releases/download/v0.3.857/templ_Darwin_x86_64.tar.gz"
-    name: "templ_Darwin_x86_64.tar.gz"
-    extractTarGz: true
-    targetFile: "templ"

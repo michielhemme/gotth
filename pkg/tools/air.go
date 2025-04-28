@@ -33,17 +33,11 @@ func InitializeConfiguration() error {
 	if err != nil {
 		return err
 	}
-	templ, err := GetExecutable("templ")
-	if err != nil {
-		return err
-	}
 	data := struct {
 		TailwindCSS string
-		Templ       string
 		OutputFile  string
 	}{
 		TailwindCSS: strings.ReplaceAll(string(tailwindCSS), "\\", "\\\\"),
-		Templ:       strings.ReplaceAll(string(templ), "\\", "\\\\"),
 		OutputFile:  lib.AppendIfExe("./tmp/main"),
 	}
 

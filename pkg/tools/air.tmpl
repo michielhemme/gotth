@@ -1,7 +1,7 @@
 [build]
   args_bin = []
   bin = "{{.OutputFile}}"
-  cmd = "{{.TailwindCSS}} -i ./static/css/custom.css -o ./static/css/style.css && templ generate && go build -o {{.OutputFile}} ./cmd/main.go"
+  cmd = "{{.TailwindCSS}} -i ./static/css/custom.css -o ./static/css/style.css && templ generate && go build -o {{.OutputFile}} ./main.go"
   delay = 0
   exclude_dir = ["assets", "tmp", "vendor", "testdata"]
   exclude_file = []

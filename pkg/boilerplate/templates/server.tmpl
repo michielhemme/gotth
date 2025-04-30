@@ -2,13 +2,15 @@ package server
 
 import (
 	"context"
+	"{{.ModulePath}}/internal/logger"
+	"{{.ModulePath}}/internal/server/get"
+	"{{.ModulePath}}/internal/server/post"
 	"fmt"
 	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
-	"{{.ModulePath}}/internal/logger"
-	"{{.ModulePath}}/internal/templates"
+
 	_ "github.com/a-h/templ"
 )
 
@@ -34,7 +36,8 @@ func (s *server) Start() error {
 	fileServer := http.FileServer(http.Dir("./static"))
 	router.Handle("GET /static/", http.StripPrefix("/static/", fileServer))
 
-	router.HandleFunc("GET /", s.defaultHandler)
+	get.RegisterGetHandlers(router)
+	post.RegisterPostHandlers(router)
 
 	// define server
 	s.httpServer = &http.Server{
@@ -58,12 +61,4 @@ func (s *server) Start() error {
 		return err
 	}
 	return nil
-}
-
-// GET /
-func (s *server) defaultHandler(w http.ResponseWriter, r *http.Request) {
-	w.WriteHeader(http.StatusOK)
-	if err := templates.Index().Render(r.Context(), w); err != nil {
-		logger.Log(2, fmt.Sprintf("Error when rendering index: %v", err))
-	}
 }

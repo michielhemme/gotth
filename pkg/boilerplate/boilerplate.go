@@ -30,11 +30,11 @@ var serverTmpl []byte
 //go:embed templates/logger.tmpl
 var loggerTmpl []byte
 
-//go:embed templates/index.tmpl
-var indexTmpl []byte
+//go:embed templates/base.tmpl
+var baseTmpl []byte
 
-//go:embed templates/indexgo.tmpl
-var indexGoTmpl []byte
+//go:embed templates/basego.tmpl
+var baseGoTmpl []byte
 
 //go:embed templates/custom.tmpl
 var customTmpl []byte
@@ -45,17 +45,37 @@ var gitignoreTmpl []byte
 //go:embed templates/tailwind.config.tmpl
 var tailwindConfigJsTmpl []byte
 
+//go:embed templates/htmx-min-js.tmpl
+var htmlMinJsTmpl []byte
+
+//go:embed templates/json-enc-js.tmpl
+var jsonEncJsTmpl []byte
+
+//go:embed templates/home.tmpl
+var homeTmpl []byte
+
+//go:embed templates/post.tmpl
+var postTmpl []byte
+
+//go:embed templates/get.tmpl
+var getTmpl []byte
+
 var fileMapping = []File{
 	{File: "go.mod", Data: nil},
 	{File: "go.sum", Data: nil},
 	{File: "main.go", Data: mainTmpl},
-	{File: "internal/server/server.go", Data: serverTmpl},
-	{File: "internal/logger/logger.go", Data: loggerTmpl},
-	{File: "internal/templates/index.templ", Data: indexTmpl},
-	{File: "internal/templates/index_templ.go", Data: indexGoTmpl},
-	{File: "static/css/custom.css", Data: customTmpl},
 	{File: ".gitignore", Data: gitignoreTmpl},
 	{File: "tailwind.config.js", Data: tailwindConfigJsTmpl},
+	{File: "internal/server/server.go", Data: serverTmpl},
+	{File: "internal/server/get/routes.go", Data: getTmpl},
+	{File: "internal/server/post/routes.go", Data: postTmpl},
+	{File: "internal/logger/logger.go", Data: loggerTmpl},
+	{File: "internal/templates/base.templ", Data: baseTmpl},
+	{File: "internal/templates/base_templ.go", Data: baseGoTmpl},
+	{File: "internal/templates/home.templ", Data: homeTmpl},
+	{File: "static/css/custom.css", Data: customTmpl},
+	{File: "static/js/htmx.min.js", Data: htmlMinJsTmpl},
+	{File: "static/js/json-enc.js", Data: jsonEncJsTmpl},
 }
 
 func alreadyInitialized(path string) (bool, error) {
@@ -104,12 +124,30 @@ func InitializeProject(modulePath string, childDirectory bool) error {
 		}
 
 	}
-	for _, step := range []func() error{
-		func() error { return runGoModInit(projectDir, modulePath) },
-		func() error { return runGoModTidy(projectDir, modulePath) },
-		func() error { return runTempl(projectDir) },
-	} {
-		if err := step(); err != nil {
+	commands := []lib.Command{
+		{
+			WorkingDir: projectDir,
+			Program:    "go",
+			Args:       []string{"mod", "init", modulePath},
+		},
+		{
+			WorkingDir: projectDir,
+			Program:    "go",
+			Args:       []string{"mod", "tidy"},
+		},
+		{
+			Program: "go",
+			Args:    []string{"install", "github.com/a-h/templ/cmd/templ@latest"},
+		},
+		{
+			WorkingDir: projectDir,
+			Program:    "templ",
+			Args:       []string{"generate"},
+		},
+	}
+
+	for _, cmd := range commands {
+		if err := lib.RunCommand(cmd); err != nil {
 			return err
 		}
 	}
@@ -127,37 +165,4 @@ func renderTemplateToFile(tmplByte []byte, templateData TemplateData, targetFile
 	}
 	defer file.Close()
 	return tmpl.Execute(file, templateData)
-}
-
-func runGoModInit(projectDir, modulePath string) error {
-	if err := lib.RunCommand(lib.Command{
-		WorkingDir: projectDir,
-		Program:    "go",
-		Args:       []string{"mod", "init", modulePath},
-	}); err != nil {
-		return err
-	}
-	return nil
-}
-
-func runGoModTidy(projectDir, modulePath string) error {
-	if err := lib.RunCommand(lib.Command{
-		WorkingDir: projectDir,
-		Program:    "go",
-		Args:       []string{"mod", "tidy"},
-	}); err != nil {
-		return err
-	}
-	return nil
-}
-
-func runTempl(projectDir string) error {
-	if err := lib.RunCommand(lib.Command{
-		WorkingDir: projectDir,
-		Program:    "templ",
-		Args:       []string{"generate"},
-	}); err != nil {
-		return err
-	}
-	return nil
 }

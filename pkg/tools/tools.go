@@ -25,7 +25,6 @@ type Binary struct {
 }
 
 var Tools = map[string]Binary{
-	"air":      {Name: airBinaryName, Data: airBinaryData},
 	"tailwind": {Name: tailwindBinaryName, Data: tailwindBinaryData},
 }
 

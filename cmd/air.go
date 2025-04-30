@@ -6,7 +6,6 @@ import (
 
 	"github.com/michielhemme/gotth/pkg/lib"
 	"github.com/michielhemme/gotth/pkg/logger"
-	"github.com/michielhemme/gotth/pkg/tools"
 	"github.com/spf13/cobra"
 )
 
@@ -22,17 +21,13 @@ var airCmd = &cobra.Command{
 		}); err != nil {
 			logger.Log(1, err)
 		}
-		executable, err := tools.GetExecutable("air")
-		if err != nil {
-			logger.Log(1, err)
-		}
 		cacheDir, err := lib.GetCacheDir()
 		if err != nil {
 			logger.Log(1, err)
 		}
 		if err := lib.RunCommand(lib.Command{
 			WorkingDir: "",
-			Program:    string(executable),
+			Program:    "air",
 			Args:       []string{"-c", path.Join(cacheDir, "air.toml")},
 		}); err != nil {
 			logger.Log(1, err)

@@ -1,0 +1,16 @@
+package get
+
+import (
+	"{{.ModulePath}}/internal/templates"
+	"net/http"
+)
+
+func RegisterGetHandlers(router *http.ServeMux) {
+	router.HandleFunc("GET /", defaultHandler)
+}
+
+// GET /
+func defaultHandler(w http.ResponseWriter, r *http.Request) {
+	templates.Layout(templates.Home(), "Home").Render(r.Context(), w)
+}
+
